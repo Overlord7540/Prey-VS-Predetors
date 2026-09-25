@@ -1,0 +1,46 @@
+{
+  "open_field": {
+    "passable": true,
+    "blocks_los": false,
+    "provides_concealment": false,
+    "is_water": false,
+    "is_resource": false
+  },
+  "feeding_ground": {
+    "passable": true,
+    "blocks_los": false,
+    "provides_concealment": true,
+    "is_water": false,
+    "is_resource": true,
+    "resource_value": 1
+  },
+  "resource_node": {
+    "passable": true,
+    "blocks_los": false,
+    "provides_concealment": false,
+    "is_water": false,
+    "is_resource": true,
+    "resource_value": 2
+  },
+  "river": {
+    "passable": false,
+    "blocks_los": false,
+    "provides_concealment": false,
+    "is_water": true,
+    "is_resource": false
+  },
+  "chokepoint": {
+    "passable": true,
+    "blocks_los": false,
+    "provides_concealment": false,
+    "is_water": true,
+    "is_resource": false
+  },
+  "rock": {
+    "passable": false,
+    "blocks_los": true,
+    "provides_concealment": false,
+    "is_water": false,
+    "is_resource": false
+  }
+}
