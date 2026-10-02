@@ -1,14 +1,4 @@
-"""
-Line-of-sight. Two modes, toggled via config (full_awareness is the v1 default):
-
-- full_awareness: predators always know every prey position. No computation.
-- los_limited: tile-based sightline check. Rocks block LoS outright; tall
-  grass (feeding_ground tiles) grants prey concealment past a short range.
-
-NOTE: v1 ships with full_awareness=True by default (see config/map.json
-win_conditions block for other tunables). This module exists so flipping
-the toggle doesn't require touching simulation.py.
-"""
+"""Tile sight. Rocks block the line. Tall grass hides a tile past a short range."""
 from __future__ import annotations
 
 from typing import Tuple
@@ -44,15 +34,26 @@ def bresenham_line(a: Coord, b: Coord) -> list[Coord]:
     return points
 
 
-def can_see(grid: Grid, observer: Coord, target: Coord, full_awareness: bool = True) -> bool:
+def can_see(grid: Grid, observer: Coord, target: Coord, full_awareness: bool = False) -> bool:
+    if not grid.in_bounds(target):
+        return False
     if full_awareness:
         return True
-
     if grid.tile_props(target).provides_concealment:
         if Grid.chebyshev_distance(observer, target) > CONCEALMENT_RANGE:
             return False
-
     for tile in bresenham_line(observer, target)[1:-1]:
-        if grid.tile_props(tile).blocks_los:
+        if grid.in_bounds(tile) and grid.tile_props(tile).blocks_los:
             return False
     return True
+
+
+def visible_tiles(grid: Grid, origin: Coord, sight_range: int) -> set[Coord]:
+    seen = {origin}
+    row, col = origin
+    for r in range(row - sight_range, row + sight_range + 1):
+        for c in range(col - sight_range, col + sight_range + 1):
+            tile = (r, c)
+            if Grid.chebyshev_distance(origin, tile) <= sight_range and can_see(grid, origin, tile):
+                seen.add(tile)
+    return seen
