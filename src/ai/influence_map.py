@@ -1,17 +1,7 @@
-"""
-STUB - deferred past the v1 core loop.
-
-Scent/danger influence maps were in the original tech spec but are likely
-redundant with the explicit PANIC/DESPAIR fcost system already in fsm.py
-(see the project review notes in docs/GDD.md, Section "Build Phasing").
-
-If revisited: a simple decaying-value grid per side (predator "danger" map,
-prey "scent" map), updated each turn and decayed by a fixed factor, read
-by fsm.py as an additional fcost term rather than a replacement for it.
-"""
+"""Enemy falloff used by tactical scores. Built from one observation, not stored on the match."""
 from __future__ import annotations
 
-from typing import Tuple
+from typing import Iterable, Tuple
 
 Coord = Tuple[int, int]
 
@@ -34,3 +24,20 @@ class InfluenceMap:
 
     def value_at(self, pos: Coord) -> float:
         return self.values.get(pos, 0.0)
+
+    def radiate(self, sources: Iterable[Coord], radius: int, visible: set[Coord]) -> dict[Coord, float]:
+        """Chebyshev falloff from each source, kept inside the visible set."""
+        field: dict[Coord, float] = {}
+        for source in sources:
+            row, col = source
+            for r in range(row - radius, row + radius + 1):
+                for c in range(col - radius, col + radius + 1):
+                    tile = (r, c)
+                    if tile not in visible:
+                        continue
+                    distance = max(abs(r - row), abs(c - col))
+                    if distance > radius:
+                        continue
+                    field[tile] = field.get(tile, 0.0) + (radius - distance)
+        self.values = field
+        return field

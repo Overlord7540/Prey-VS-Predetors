@@ -17,6 +17,7 @@ from collections import deque
 from typing import Dict, List, Optional, Tuple
 
 from src.core.grid import Grid
+from src.core.movement import step_cost
 
 Coord = Tuple[int, int]
 
@@ -40,8 +41,9 @@ def bfs_shortest_path(grid: Grid, start: Coord, goal: Coord) -> Optional[List[Co
     return None
 
 
-def nearest_resource(grid: Grid, start: Coord) -> Optional[Tuple[Coord, List[Coord]]]:
+def nearest_resource(grid: Grid, start: Coord, blocked: Optional[set[Coord]] = None) -> Optional[Tuple[Coord, List[Coord]]]:
     """BFS out from start, return the first resource-node tile with stock and the path to it."""
+    blocked = blocked or set()
     if start in grid.resources_remaining and grid.resources_remaining[start] > 0:
         return start, [start]
     visited = {start}
@@ -50,7 +52,7 @@ def nearest_resource(grid: Grid, start: Coord) -> Optional[Tuple[Coord, List[Coo
         path = queue.popleft()
         current = path[-1]
         for nxt in grid.passable_neighbors(current):
-            if nxt in visited:
+            if nxt in visited or nxt in blocked:
                 continue
             new_path = path + [nxt]
             if grid.resources_remaining.get(nxt, 0) > 0:
@@ -60,8 +62,11 @@ def nearest_resource(grid: Grid, start: Coord) -> Optional[Tuple[Coord, List[Coo
     return None
 
 
-def a_star(grid: Grid, start: Coord, goal: Coord) -> Optional[List[Coord]]:
-    """Standard A* with Chebyshev heuristic (matches 8-directional movement)."""
+def a_star(grid: Grid, start: Coord, goal: Coord, blocked: Optional[set[Coord]] = None) -> Optional[List[Coord]]:
+    """A* with a Manhattan heuristic. A diagonal step costs 2, a straight step costs 1."""
+    blocked = blocked or set()
+    if goal in blocked or not grid.is_passable(goal):
+        return None
     open_set = [(0, start)]
     came_from: Dict[Coord, Coord] = {}
     g_score = {start: 0}
@@ -76,11 +81,15 @@ def a_star(grid: Grid, start: Coord, goal: Coord) -> Optional[List[Coord]]:
             return list(reversed(path))
 
         for nxt in grid.passable_neighbors(current):
-            tentative_g = g_score[current] + 1
+            if nxt in blocked:
+                continue
+            tentative_g = g_score[current] + step_cost(current, nxt)
             if tentative_g < g_score.get(nxt, float("inf")):
                 came_from[nxt] = current
                 g_score[nxt] = tentative_g
-                f = tentative_g + Grid.chebyshev_distance(nxt, goal)
+                dr = abs(nxt[0] - goal[0])
+                dc = abs(nxt[1] - goal[1])
+                f = tentative_g + dr + dc
                 heapq.heappush(open_set, (f, nxt))
     return None
 
