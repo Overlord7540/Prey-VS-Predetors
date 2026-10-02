@@ -12,7 +12,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List
 
-CONFIG_DIR = Path(__file__).resolve().parents[2] / "config"
+from src.root import project_root
+
+CONFIG_DIR = project_root() / "config"
 
 
 @dataclass
@@ -31,6 +33,9 @@ class UnitStats:
     recovery_hp_per_turn: int = 0
     wounds_persist_across_turns: bool = False
     vulnerable_at_water_midtile: bool = False
+    damage_spread: int = 0
+    panic_range: int | None = None
+    sight_range: int | None = None
 
 
 @dataclass
@@ -54,21 +59,22 @@ class MapLayout:
     resource_nodes: List[dict]
     rocks: List[dict]
     win_conditions: dict = field(default_factory=dict)
+    behavior_rules: dict = field(default_factory=dict)
 
 
 def load_units(path: Path = CONFIG_DIR / "units.json") -> Dict[str, UnitStats]:
-    raw = json.loads(path.read_text())
+    raw = json.loads(path.read_text(encoding="utf-8"))
     return {name: UnitStats(name=name, **{k: v for k, v in stats.items() if k != "notes"})
             for name, stats in raw.items()}
 
 
 def load_tiles(path: Path = CONFIG_DIR / "tiles.json") -> Dict[str, TileProps]:
-    raw = json.loads(path.read_text())
+    raw = json.loads(path.read_text(encoding="utf-8"))
     return {name: TileProps(name=name, **props) for name, props in raw.items()}
 
 
 def load_map(path: Path = CONFIG_DIR / "map.json") -> MapLayout:
-    raw = json.loads(path.read_text())
+    raw = json.loads(path.read_text(encoding="utf-8"))
     return MapLayout(**raw)
 
 
@@ -79,3 +85,42 @@ if __name__ == "__main__":
     game_map = load_map()
     print(f"Loaded {len(units)} units, {len(tiles)} tile types, "
           f"{game_map.width}x{game_map.height} map")
+
+
+def load_scenario(path: Path = CONFIG_DIR / "scenario.json") -> dict:
+    """Load scenario data; construction validates species, positions and counts."""
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(raw.get("predators"), list) or not isinstance(raw.get("herds"), list):
+        raise ValueError("Scenario requires predators and herds lists")
+    return raw
+
+
+def load_named_scenario(name: str = "riverlands") -> dict:
+    """Riverlands is the original file. Other names live in config/scenarios/."""
+    if name == "riverlands":
+        return load_scenario()
+    path = CONFIG_DIR / "scenarios" / f"{name}.json"
+    if not path.exists():
+        raise ValueError(f"Unknown scenario: {name}")
+    return load_scenario(path)
+
+
+def sized_scenario(name: str, large: bool = False) -> str:
+    """Small boards use the named scenario. Large boards use the matching file when one exists."""
+    if not large:
+        return name
+    large_name = f"{name}_large"
+    if (CONFIG_DIR / "scenarios" / f"{large_name}.json").exists() or name == "riverlands":
+        return large_name
+    return name
+
+
+def load_battle(name: str = "skirmish") -> dict:
+    """One fight. This is not a wildlife scenario and has no herds."""
+    path = CONFIG_DIR / "battles" / f"{name}.json"
+    if not path.exists():
+        raise ValueError(f"Unknown battle: {name}")
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(raw.get("map"), str) or not isinstance(raw.get("fighters"), list):
+        raise ValueError("Battle requires a map and a fighters list")
+    return raw

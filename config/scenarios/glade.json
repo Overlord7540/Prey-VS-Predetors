@@ -1,0 +1,20 @@
+{
+  "map": "maps/glade.json",
+  "lesson": "glade",
+  "predators": [
+    {"agent_id": "wolf_1", "species": "wolf", "pos": [1, 1]}
+  ],
+  "herds": [
+    {
+      "flock_id": "deer_glade",
+      "species": "deer",
+      "center": [6, 7],
+      "radius": 1,
+      "count": 2
+    }
+  ],
+  "starts": {
+    "dawn": {"wolf_1": [1, 8], "deer_glade": [6, 1]},
+    "dusk": {"wolf_1": [6, 1], "deer_glade": [1, 8]}
+  }
+}

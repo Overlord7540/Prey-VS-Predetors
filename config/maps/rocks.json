@@ -1,0 +1,30 @@
+{
+  "width": 10,
+  "height": 8,
+  "river_row": -1,
+  "chokepoints": [],
+  "feeding_grounds": [
+    {"row": 7, "col": 1, "radius": 1},
+    {"row": 3, "col": 8, "radius": 0}
+  ],
+  "resource_nodes": [
+    {"row": 6, "col": 8},
+    {"row": 1, "col": 1}
+  ],
+  "rocks": [
+    {"row": 2, "col": 4},
+    {"row": 3, "col": 4},
+    {"row": 4, "col": 4},
+    {"row": 5, "col": 4},
+    {"row": 6, "col": 4}
+  ],
+  "win_conditions": {
+    "predator_win_prey_elimination_pct": 0.7,
+    "prey_win_resource_pool_pct": 0.65
+  },
+  "behavior_rules": {
+    "panic_detection_range": 4,
+    "despair_recovery_range": 3,
+    "sight_range": 6
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "seed": 7,
+  "scenario": "riverlands",
+  "controller": "learned",
+  "max_rounds": 40
+}

@@ -1,0 +1,20 @@
+{
+  "map": "maps/rocks.json",
+  "lesson": "rocks",
+  "predators": [
+    {"agent_id": "wolf_1", "species": "wolf", "pos": [3, 1]}
+  ],
+  "herds": [
+    {
+      "flock_id": "deer_far",
+      "species": "deer",
+      "center": [5, 8],
+      "radius": 1,
+      "count": 2
+    }
+  ],
+  "starts": {
+    "dawn": {"wolf_1": [0, 1], "deer_far": [3, 8]},
+    "dusk": {"wolf_1": [7, 1], "deer_far": [6, 8]}
+  }
+}

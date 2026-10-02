@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Predator & Prey — Lab Presentation</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #1a2332;
+    --text: #e8eef4;
+    --muted: #8b9aab;
+    --accent: #3d9cf0;
+    --prey: #00bcd4;
+    --pred: #ff6f00;
+    --warn: #ffc107;
+    --ok: #66bb6a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, sans-serif; overflow: hidden; }
+  .deck { height: 100%; position: relative; }
+  .slide {
+    display: none; height: 100%; padding: 3.2vh 4.5vw 8vh;
+    flex-direction: column; justify-content: center; gap: 1.6vh;
+  }
+  .slide.active { display: flex; }
+  h1 { font-size: clamp(1.8rem, 3.8vw, 2.8rem); font-weight: 700; letter-spacing: -0.02em; }
+  h2 { font-size: clamp(1.35rem, 2.6vw, 2rem); color: var(--accent); font-weight: 650; }
+  h3 { font-size: 1.05rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+  p, li { font-size: clamp(0.95rem, 1.35vw, 1.2rem); line-height: 1.45; }
+  .muted { color: var(--muted); }
+  .row { display: flex; gap: 2vw; align-items: stretch; flex: 1; min-height: 0; }
+  .col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.2vh; }
+  .card {
+    background: var(--panel); border: 1px solid #2a3a4d; border-radius: 12px;
+    padding: 1.4vh 1.2vw;
+  }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2vw; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.2vw; }
+  ul { list-style: none; display: flex; flex-direction: column; gap: 0.7vh; }
+  ul li::before { content: "▸ "; color: var(--accent); }
+  .tag {
+    display: inline-block; padding: 0.2em 0.65em; border-radius: 999px;
+    font-size: 0.78rem; font-weight: 650; letter-spacing: 0.04em;
+  }
+  .tag.pred { background: #3a2208; color: var(--pred); }
+  .tag.prey { background: #06333a; color: var(--prey); }
+  .tag.ai { background: #0d2a4a; color: var(--accent); }
+  .tag.ok { background: #14301a; color: var(--ok); }
+  .tag.warn { background: #3a3008; color: var(--warn); }
+  .shot {
+    width: 100%; height: auto; max-height: 62vh; object-fit: contain;
+    border-radius: 10px; border: 1px solid #2a3a4d; background: #000;
+  }
+  .shot.sm { max-height: 48vh; }
+  .flow {
+    display: flex; flex-wrap: wrap; gap: 0.6vw; align-items: center;
+    font-size: clamp(0.85rem, 1.2vw, 1.05rem); font-weight: 600;
+  }
+  .flow span {
+    background: var(--panel); border: 1px solid #334960; padding: 0.55em 0.9em;
+    border-radius: 8px;
+  }
+  .flow .arr { border: none; background: none; color: var(--accent); padding: 0 0.15em; }
+  table { width: 100%; border-collapse: collapse; font-size: clamp(0.85rem, 1.15vw, 1.05rem); }
+  th, td { text-align: left; padding: 0.7vh 0.8vw; border-bottom: 1px solid #2a3a4d; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.85em; }
+  .eq {
+    font-family: Consolas, "Courier New", monospace; background: #0b1220;
+    border: 1px solid #2a3a4d; border-radius: 8px; padding: 1vh 1vw;
+    font-size: clamp(0.9rem, 1.3vw, 1.15rem);
+  }
+  .big { font-size: clamp(1.15rem, 2vw, 1.55rem); font-weight: 650; }
+  .footer {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 5.5vh;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2vw; background: rgba(15,20,25,0.92); border-top: 1px solid #243044;
+    font-size: 0.85rem; color: var(--muted); z-index: 10;
+  }
+  .progress { height: 3px; background: #243044; position: fixed; top: 0; left: 0; right: 0; z-index: 11; }
+  .progress > i { display: block; height: 100%; background: var(--accent); width: 0%; }
+  kbd {
+    font-family: inherit; background: #243044; border-radius: 4px;
+    padding: 0.1em 0.45em; font-size: 0.85em;
+  }
+  .title-slide { text-align: left; }
+  .title-slide .sub { font-size: clamp(1rem, 1.6vw, 1.25rem); color: var(--muted); max-width: 42em; }
+  .pillars { display: flex; gap: 1vw; margin-top: 2vh; flex-wrap: wrap; }
+  .pillars .card { flex: 1; min-width: 140px; }
+  .pillars strong { display: block; color: var(--accent); margin-bottom: 0.4vh; }
+  .two-shot { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2vw; }
+  .two-shot figure { margin: 0; }
+  .two-shot figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.6vh; text-align: center; }
+  .gap-row { display: flex; gap: 1vw; flex-wrap: wrap; }
+  .gap-row .card { flex: 1; min-width: 200px; }
+  .defend { border-left: 3px solid var(--ok); }
+  .missing { border-left: 3px solid var(--warn); }
+</style>
+</head>
+<body>
+<div class="progress"><i id="bar"></i></div>
+<div class="deck" id="deck">
+
+  <!-- 1 -->
+  <section class="slide active title-slide">
+    <h3>CSE 3812 · AI Lab</h3>
+    <h1>Predator & Prey</h1>
+    <p class="sub">Grid-based tactical AI simulation — predators hunt, prey forage, win by elimination or resource control.</p>
+    <div class="pillars">
+      <div class="card"><strong>Search</strong>BFS · A*</div>
+      <div class="card"><strong>Behavior</strong>FSM · Intents · Fcost</div>
+      <div class="card"><strong>Core</strong>Turns · Combat · Occupancy</div>
+      <div class="card"><strong>Vision</strong>Full awareness (v1)</div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide">
+    <h2>Problem</h2>
+    <div class="grid2" style="flex:1">
+      <div class="card">
+        <span class="tag pred">Predators</span>
+        <p class="big" style="margin-top:1vh">Eliminate ≥ 70% of prey</p>
+        <p class="muted">Tiger (one-shot) · Wolves (damage + cooldown)</p>
+      </div>
+      <div class="card">
+        <span class="tag prey">Prey</span>
+        <p class="big" style="margin-top:1vh">Consume ≥ 65% of food</p>
+        <p class="muted">Deer herds · shared goals · flee under threat</p>
+      </div>
+    </div>
+    <p class="muted">Alternating team turns · Predators first each round · 20×20 map</p>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide">
+    <h2>Architecture</h2>
+    <div class="flow">
+      <span>config/*.json</span><span class="arr">→</span>
+      <span>data/loader</span><span class="arr">→</span>
+      <span>core (rules)</span><span class="arr">→</span>
+      <span class="tag ai">ai (decisions)</span><span class="arr">→</span>
+      <span>rendering</span>
+    </div>
+    <div class="grid3" style="margin-top:2vh">
+      <div class="card"><strong>core/</strong><br/><span class="muted">Grid · Agents · Combat · Simulation · Scenario<br/>No Pygame — headless + tested</span></div>
+      <div class="card"><strong>ai/</strong><br/><span class="muted">BFS · A* · Fcost · FSM · FoV (ready) · Influence (stub)</span></div>
+      <div class="card"><strong>rendering/</strong><br/><span class="muted">Pygame view only — never mutates sim</span></div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide">
+    <h2>Map & Units (live render)</h2>
+    <div class="row">
+      <div class="col" style="flex:1.35"><img class="shot" src="assets/01_start.png" alt="Start state" /></div>
+      <div class="col" style="justify-content:center">
+        <ul>
+          <li>River + 2 chokepoints</li>
+          <li>3 feeding grounds · resource nodes</li>
+          <li>Rocks block movement</li>
+          <li><span class="tag pred">T</span> Tiger · <span class="tag pred">W</span> Wolves</li>
+          <li><span class="tag prey">D</span> 6 deer · 3 herds</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide">
+    <h2>Core Workflow — One Round</h2>
+    <div class="flow">
+      <span>Predator turn</span><span class="arr">→</span>
+      <span>Each predator: move + attack</span><span class="arr">→</span>
+      <span>Prey turn</span><span class="arr">→</span>
+      <span>Each prey: move + feed</span><span class="arr">→</span>
+      <span>Win check</span>
+    </div>
+    <div class="grid2" style="margin-top:2vh">
+      <div class="card">
+        <h3>Hard rules</h3>
+        <ul>
+          <li>No shared tiles (occupancy)</li>
+          <li>Moves sequential · adjacent only</li>
+          <li>Predators attack from next tile — never stack on prey</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Dynamic each turn</h3>
+        <ul>
+          <li>Positions · HP · food stock</li>
+          <li>Prey state · wolf cooldown</li>
+          <li>Flock food goal · events · winner</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide">
+    <h2>Mid-Game State</h2>
+    <div class="row">
+      <div class="col"><img class="shot" src="assets/02_midgame.png" alt="Mid game" /></div>
+      <div class="col" style="justify-content:center">
+        <ul>
+          <li>Herds split across feeding areas</li>
+          <li>Brown tiles = depleted food</li>
+          <li>Same rules in Fast & Detailed playback</li>
+        </ul>
+        <p class="muted" style="margin-top:1.5vh">Screenshot from real <code>Renderer</code> + <code>Simulation</code></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide">
+    <h2>Algorithms — Search</h2>
+    <table>
+      <tr><th>Algo</th><th>Where</th><th>Does</th></tr>
+      <tr><td><strong>BFS</strong></td><td>nearest food · flock goal</td><td>Unweighted shortest reach</td></tr>
+      <tr><td><strong>A*</strong></td><td>prey NORMAL · predator intents</td><td>Path with Chebyshev heuristic</td></tr>
+      <tr><td><strong>Chebyshev</strong></td><td>everywhere</td><td>8-dir distance · adjacency</td></tr>
+    </table>
+    <div class="eq" style="margin-top:2vh">A*: &nbsp; f = g + h &nbsp;&nbsp;|&nbsp;&nbsp; h = max(|Δr|, |Δc|)</div>
+    <p class="muted" style="margin-top:1vh">Take only the next step each turn — replan next round.</p>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide">
+    <h2>Predator Intents (rolled once)</h2>
+    <div class="grid3">
+      <div class="card">
+        <h3>Chase</h3>
+        <p>A* toward closest prey</p>
+        <p class="muted">Also after tiger’s first kill</p>
+      </div>
+      <div class="card">
+        <h3>Ambush</h3>
+        <p>A* to midpoint(prey, prey’s food)</p>
+        <p class="muted">Wolf bias</p>
+      </div>
+      <div class="card">
+        <h3>Camp</h3>
+        <p>Wait opposite side of river</p>
+        <p class="muted">If prey &lt; 3 tiles → close in · Tiger bias</p>
+      </div>
+    </div>
+    <p style="margin-top:2vh">Target = <strong>closest living prey</strong> · recomputed every move</p>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide">
+    <h2>Prey FSM</h2>
+    <div class="flow">
+      <span>NORMAL</span><span class="arr">→</span>
+      <span>PANIC</span><span class="arr">→</span>
+      <span>DESPAIR</span><span class="arr">→</span>
+      <span>NORMAL if predator &gt; 3</span>
+    </div>
+    <div class="grid3" style="margin-top:2vh">
+      <div class="card"><strong>NORMAL</strong><br/>Shared flock food goal · A* · eat underfoot if safe</div>
+      <div class="card"><strong>PANIC</strong><br/>Flee + still prefer food (fcost)</div>
+      <div class="card"><strong>DESPAIR</strong><br/>Flee + regroup flock · no food term</div>
+    </div>
+    <p class="muted" style="margin-top:1.5vh">Despair triggers on kill · Panic scoring implemented · spotting trigger = Phase 2 wire</p>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide">
+    <h2>Fcost ≠ A*’s f</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>What it is</h3>
+        <p>Local rank score over ≤8 neighbors (+ stay)</p>
+        <div class="eq" style="margin-top:1.2vh">best gets N … worst gets 1<br/>fcost = sum of ranks</div>
+      </div>
+      <div class="card">
+        <h3>Formulas</h3>
+        <p><strong>Panic:</strong> away from predator + toward food</p>
+        <p style="margin-top:1vh"><strong>Despair:</strong> away from predator + toward mate (unless already ≤2)</p>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:1.5vh">A* = global path to a goal &nbsp;·&nbsp; Fcost = one emergency step under fear</p>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide">
+    <h2>Combat & Events</h2>
+    <div class="row">
+      <div class="col"><img class="shot sm" src="assets/04_kill_event.png" alt="Kill event" /></div>
+      <div class="col" style="justify-content:center">
+        <ul>
+          <li>Adjacent after move → attack</li>
+          <li>Tiger one-shots · Wolf 60 dmg</li>
+          <li>Wolf skips attacks 1 full turn after kill</li>
+          <li>KILL / EMPTY FX + sidebar log</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide">
+    <h2>Vision</h2>
+    <div class="card">
+      <p class="big">v1 = <span class="tag ok">Full awareness</span> — whole map known</p>
+      <p class="muted" style="margin-top:1vh">No fog of war in the live turn loop</p>
+    </div>
+    <div class="grid2" style="margin-top:2vh">
+      <div class="card missing">
+        <h3>Ready, not wired</h3>
+        <p><code>src/ai/fov.py</code></p>
+        <ul>
+          <li>Rocks block Bresenham LoS</li>
+          <li>Tall grass hides past 3 tiles</li>
+        </ul>
+      </div>
+      <div class="card defend">
+        <h3>Defend</h3>
+        <p>Deterministic chase & tests first. LoS is an optional harder mode per GDD.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 -->
+  <section class="slide">
+    <h2>CSP?</h2>
+    <div class="card">
+      <p class="big"><span class="tag warn">Not used</span> &nbsp; Current AI = search + FSM + local scoring</p>
+    </div>
+    <div class="grid2" style="margin-top:2vh">
+      <div class="card">
+        <h3>Where CSP could fit</h3>
+        <ul>
+          <li>Legal spawn layouts</li>
+          <li>Simultaneous herd next-tiles</li>
+          <li>Wolf pack spacing assignment</li>
+        </ul>
+      </div>
+      <div class="card defend">
+        <h3>What we do instead</h3>
+        <p>Sequential moves + hard occupancy checks = constraints enforced, not a CSP solver.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 -->
+  <section class="slide">
+    <h2>Detailed Playback</h2>
+    <div class="row">
+      <div class="col"><img class="shot sm" src="assets/03_detailed_action.png" alt="Detailed action" /></div>
+      <div class="col" style="justify-content:center">
+        <ul>
+          <li>One unit action per tick</li>
+          <li>Active unit highlighted</li>
+          <li>Fast mode = full round / tick</li>
+          <li>Identical outcomes (tested)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15 -->
+  <section class="slide">
+    <h2>Foraging & Depletion</h2>
+    <div class="row">
+      <div class="col"><img class="shot sm" src="assets/05_feeding_depleted.png" alt="Feeding" /></div>
+      <div class="col" style="justify-content:center">
+        <ul>
+          <li>Eat underfoot when safe</li>
+          <li>Blocked goal → BFS other food</li>
+          <li>Depleted = brown · still passable</li>
+          <li>Prey win at 65% pool eaten</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 16 -->
+  <section class="slide">
+    <h2>Debug Overlay</h2>
+    <div class="row">
+      <div class="col"><img class="shot sm" src="assets/06_debug_overlay.png" alt="Debug" /></div>
+      <div class="col" style="justify-content:center">
+        <ul>
+          <li><kbd>F1</kbd> — intents + prey states</li>
+          <li>Shows Chase / Ambush / Camp</li>
+          <li>Shows N / P / D state letter</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 17 -->
+  <section class="slide">
+    <h2>End State</h2>
+    <div class="row">
+      <div class="col"><img class="shot sm" src="assets/07_endgame.png" alt="End" /></div>
+      <div class="col" style="justify-content:center">
+        <ul>
+          <li>Winner set when threshold hit</li>
+          <li>Sample balance ~55% prey / 45% pred (seeds 0–99)</li>
+          <li>History logged each round</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 18 -->
+  <section class="slide">
+    <h2>Gaps & Defense</h2>
+    <div class="gap-row">
+      <div class="card missing"><strong>Panic spotting</strong><br/><span class="muted">Fcost ready · trigger not wired</span><br/>Phase 2 — despair already on kill</div>
+      <div class="card missing"><strong>Wolf pack AI</strong><br/><span class="muted">Coded · default uses solo A*</span><br/>Next: assign pack_id + call pack step</div>
+      <div class="card missing"><strong>LoS / influence / CSP</strong><br/><span class="muted">Optional / deferred</span><br/>Not required for core demo</div>
+    </div>
+    <p class="big" style="margin-top:2vh"><span class="tag ok">Done</span> Core loop · occupancy · BFS/A* · intents · despair · fcost · combat · wins · playback · tests</p>
+  </section>
+
+  <!-- 19 -->
+  <section class="slide">
+    <h2>Demo Controls</h2>
+    <table>
+      <tr><th>Key</th><th>Action</th></tr>
+      <tr><td><kbd>Space</kbd></td><td>Pause / resume</td></tr>
+      <tr><td><kbd>T</kbd></td><td>Detailed ↔ Fast</td></tr>
+      <tr><td><kbd>N</kbd></td><td>Next action / round</td></tr>
+      <tr><td><kbd>+ / −</kbd></td><td>Speed</td></tr>
+      <tr><td><kbd>R</kbd></td><td>New scenario</td></tr>
+      <tr><td><kbd>F1</kbd></td><td>Debug overlay</td></tr>
+    </table>
+    <p class="muted" style="margin-top:2vh"><code>python -m src.main</code> &nbsp;·&nbsp; <code>pytest tests/ -v</code></p>
+  </section>
+
+  <!-- 20 -->
+  <section class="slide title-slide">
+    <h1>Summary</h1>
+    <ul style="margin-top:2vh; max-width:40em">
+      <li>Headless <strong>core</strong> owns rules; <strong>AI</strong> chooses moves; <strong>render</strong> only shows</li>
+      <li>Search: BFS + A* · Fear: ranked fcost · Behavior: FSM + intents</li>
+      <li>Vision: full map in v1 · FoV module ready for later</li>
+      <li>Honest Phase-1 complete · Phase-2 wires identified</li>
+    </ul>
+    <p class="muted" style="margin-top:3vh">Questions?</p>
+  </section>
+
+</div>
+
+<div class="footer">
+  <span>Predator & Prey · AI Lab</span>
+  <span><kbd>←</kbd> <kbd>→</kbd> or click · <span id="num">1</span> / <span id="total">20</span></span>
+</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+  let i = 0;
+  function show(n) {
+    i = Math.max(0, Math.min(total - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    document.getElementById('num').textContent = i + 1;
+    document.getElementById('bar').style.width = ((i + 1) / total * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); show(i + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(i - 1); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(total - 1);
+  });
+  document.addEventListener('click', e => {
+    if (e.target.closest('a, kbd')) return;
+    show(e.clientX > innerWidth / 2 ? i + 1 : i - 1);
+  });
+  show(0);
+</script>
+</body>
+</html>

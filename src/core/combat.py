@@ -1,13 +1,6 @@
-"""
-Combat resolution. Deterministic HP subtraction, per the locked design rules:
+"""Seeded bounded damage, per-predator attack limits, and survivor escape effects.
 
-- Kill trigger = Zone of Control: a predator threatens its own tile AND all
-  8 adjacent tiles. A prey unit that ends its move on, or passes through,
-  any threatened tile can be attacked.
-- Wolf cooldown is per-wolf, not pack-wide.
-- Giraffe wounds persist across turns (no HP reset between hits).
-- Buffalo's 2-tile water move is vulnerable at the mid-tile: check both
-  the intermediate and final tile against every predator's zone of control.
+Zone/path helpers are retained for analysis; movement no longer triggers attacks.
 """
 from __future__ import annotations
 
@@ -17,6 +10,7 @@ from src.core.agent import PredatorAgent, PreyAgent
 from src.core.grid import Grid
 
 Coord = Tuple[int, int]
+WATER_EXPOSURE = 8
 
 
 def zone_of_control(grid: Grid, predator: PredatorAgent) -> List[Coord]:
@@ -49,18 +43,34 @@ def check_attack_triggers(
     return triggered
 
 
-def resolve_attack(predator: PredatorAgent, prey: PreyAgent, unit_stats: dict) -> int:
+def damage_range(predator, unit_stats):
+    stats = unit_stats[predator.species]
+    return max(1, stats.damage - stats.damage_spread), stats.damage + stats.damage_spread
+
+
+def resolve_attack(predator: PredatorAgent, prey: PreyAgent, unit_stats: dict, rng=None,
+                    exposure: int = 0) -> int:
     """
     Applies damage from predator -> prey. Returns damage dealt.
-    Caller is responsible for checking predator.can_attack() first and for
-    setting predator.cooldown_remaining after a Wolf kill (per-wolf only).
+    Consumes the predator's single attack allowance.
+    Cooldown begins after a Wolf kill; begin_round advances it.
     """
-    if not predator.can_attack():
+    if not predator.alive or not prey.alive or not predator.can_attack() or prey.escape_guard:
         return 0
 
     stats = unit_stats[predator.species]
-    damage = 9999 if stats.one_shot_kill else stats.damage
+    low, high = damage_range(predator, unit_stats)
+    damage = rng.randint(low, high) if rng is not None else stats.damage
+    damage = min(prey.hp, damage + exposure)
+    # The first hit on an unwounded animal leaves them standing so they can bolt.
+    if not stats.one_shot_kill and prey.hp == prey.max_hp and prey.hp > 1:
+        damage = min(damage, prey.hp - 1)
+    predator.attack_used = True
     killed = prey.take_damage(damage)
+    if not killed and prey.adrenaline_cooldown == 0:
+        prey.adrenaline = True
+        prey.escape_guard = True
+        prey.adrenaline_cooldown = 3
 
     if predator.species == "wolf" and killed:
         predator.cooldown_remaining = stats.cooldown_after_kill

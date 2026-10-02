@@ -1,0 +1,47 @@
+{
+  "map": "maps/rookery.json",
+  "lesson": "rookery",
+  "predators": [
+    {"agent_id": "jackal_1", "species": "jackal", "pos": [2, 2]},
+    {"agent_id": "jackal_2", "species": "jackal", "pos": [2, 3]}
+  ],
+  "herds": [
+    {
+      "flock_id": "hares",
+      "species": "hare",
+      "center": [8, 9],
+      "radius": 1,
+      "count": 2
+    },
+    {
+      "flock_id": "heron_bank",
+      "species": "heron",
+      "center": [3, 9],
+      "radius": 0,
+      "count": 1
+    },
+    {
+      "flock_id": "deer_west",
+      "species": "deer",
+      "center": [8, 2],
+      "radius": 0,
+      "count": 1
+    }
+  ],
+  "starts": {
+    "dawn": {
+      "jackal_1": [2, 8],
+      "jackal_2": [2, 9],
+      "heron_bank": [3, 1],
+      "hares": [8, 2],
+      "deer_west": [8, 8]
+    },
+    "dusk": {
+      "jackal_1": [1, 5],
+      "jackal_2": [1, 6],
+      "heron_bank": [3, 8],
+      "hares": [9, 6],
+      "deer_west": [8, 1]
+    }
+  }
+}

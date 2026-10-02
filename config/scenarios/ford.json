@@ -1,0 +1,44 @@
+{
+  "map": "maps/ford.json",
+  "lesson": "ford",
+  "predators": [
+    {"agent_id": "tiger_1", "species": "tiger", "pos": [4, 1]}
+  ],
+  "herds": [
+    {
+      "flock_id": "deer_south",
+      "species": "deer",
+      "center": [5, 6],
+      "radius": 0,
+      "count": 1
+    },
+    {
+      "flock_id": "deer_east",
+      "species": "deer",
+      "center": [7, 7],
+      "radius": 0,
+      "count": 1
+    },
+    {
+      "flock_id": "buffalo_ford",
+      "species": "buffalo",
+      "center": [6, 8],
+      "radius": 0,
+      "count": 1
+    }
+  ],
+  "starts": {
+    "dawn": {
+      "tiger_1": [0, 8],
+      "deer_south": [6, 1],
+      "deer_east": [7, 2],
+      "buffalo_ford": [7, 3]
+    },
+    "dusk": {
+      "tiger_1": [1, 6],
+      "deer_south": [6, 8],
+      "deer_east": [7, 6],
+      "buffalo_ford": [5, 8]
+    }
+  }
+}

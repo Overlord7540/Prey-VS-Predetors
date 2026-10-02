@@ -1,0 +1,12 @@
+{
+  "width": 12,
+  "height": 12,
+  "river_row": -1,
+  "chokepoints": [],
+  "feeding_grounds": [],
+  "resource_nodes": [],
+  "rocks": [],
+  "behavior_rules": {
+    "sight_range": 12
+  }
+}

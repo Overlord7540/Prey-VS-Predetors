@@ -1,0 +1,31 @@
+{
+  "map": "maps/basin_large.json",
+  "predators": [
+    {"agent_id": "tiger_1", "species": "tiger", "pos": [6, 8]},
+    {"agent_id": "wolf_1", "species": "wolf", "pos": [6, 11]},
+    {"agent_id": "wolf_2", "species": "wolf", "pos": [12, 8]}
+  ],
+  "herds": [
+    {"flock_id": "deer_north", "species": "deer", "center": [1, 2], "radius": 1, "count": 2},
+    {"flock_id": "buffalo_south", "species": "buffalo", "center": [15, 4], "radius": 1, "count": 2},
+    {"flock_id": "giraffe_east", "species": "giraffe", "center": [3, 17], "radius": 0, "count": 1}
+  ],
+  "starts": {
+    "dawn": {
+      "tiger_1": [6, 2],
+      "wolf_1": [5, 4],
+      "wolf_2": [14, 16],
+      "deer_north": [1, 16],
+      "buffalo_south": [16, 14],
+      "giraffe_east": [3, 4]
+    },
+    "dusk": {
+      "tiger_1": [4, 14],
+      "wolf_1": [6, 16],
+      "wolf_2": [15, 8],
+      "deer_north": [1, 6],
+      "buffalo_south": [17, 10],
+      "giraffe_east": [5, 18]
+    }
+  }
+}

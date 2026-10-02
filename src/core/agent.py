@@ -47,6 +47,9 @@ class PreyAgent(Agent):
     state: PreyState = PreyState.NORMAL
     panic_turns_remaining: int = 0  # blocks new panic triggers flock-wide
     goal: Optional[Coord] = None    # shared flock goal (resource tile)
+    adrenaline: bool = False
+    adrenaline_cooldown: int = 0  # counted in this animal's activations
+    escape_guard: bool = False  # expires after the next activation
 
     def take_damage(self, amount: int) -> bool:
         """Returns True if this kills the prey."""
@@ -63,8 +66,17 @@ class PredatorAgent(Agent):
     cooldown_remaining: int = 0
     is_constant_chase: bool = False  # set True permanently after first kill
 
+    attack_used: bool = False
+    resting_this_round: bool = False
+
+    def begin_round(self) -> None:
+        self.attack_used = False
+        self.resting_this_round = self.cooldown_remaining > 0
+        if self.resting_this_round:
+            self.cooldown_remaining -= 1
+
     def can_attack(self) -> bool:
-        return self.cooldown_remaining == 0
+        return not self.attack_used and not self.resting_this_round and self.cooldown_remaining == 0
 
 
 @dataclass

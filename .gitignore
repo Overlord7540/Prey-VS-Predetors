@@ -7,3 +7,14 @@ venv/
 logs/*.csv
 *.log
 .DS_Store
+
+# Local graphical verification dependencies
+.local-deps/
+.artifacts/
+
+# Downloaded source packs stay local. Sliced game tiles live in assets/.
+tmp/
+
+# Packaged game. Rebuild with pyinstaller play.py.
+build/
+dist/

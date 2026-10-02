@@ -1,0 +1,30 @@
+{
+  "predators": [
+    {"agent_id": "tiger_1", "species": "tiger", "pos": [0, 1]},
+    {"agent_id": "wolf_1", "species": "wolf", "pos": [9, 8]},
+    {"agent_id": "wolf_2", "species": "wolf", "pos": [9, 9]}
+  ],
+  "herds": [
+    {"flock_id": "deer_herd_0", "species": "deer", "center": [2, 6], "radius": 1, "count": 2},
+    {"flock_id": "deer_herd_1", "species": "deer", "center": [6, 5], "radius": 1, "count": 2},
+    {"flock_id": "deer_herd_2", "species": "deer", "center": [8, 2], "radius": 1, "count": 2}
+  ],
+  "starts": {
+    "dawn": {
+      "tiger_1": [0, 10],
+      "wolf_1": [9, 1],
+      "wolf_2": [9, 2],
+      "deer_herd_0": [1, 8],
+      "deer_herd_1": [7, 3],
+      "deer_herd_2": [8, 8]
+    },
+    "dusk": {
+      "tiger_1": [2, 8],
+      "wolf_1": [8, 10],
+      "wolf_2": [9, 10],
+      "deer_herd_0": [1, 2],
+      "deer_herd_1": [6, 8],
+      "deer_herd_2": [8, 4]
+    }
+  }
+}

@@ -8,16 +8,16 @@ def make_grid():
     return Grid(load_map(), load_tiles())
 
 
-def test_tiger_one_shots_giraffe():
+def test_tiger_hit_leaves_giraffe_alive():
     units = load_units()
     tiger = PredatorAgent(agent_id="t1", species="tiger", pos=(0, 0), side="predator")
     giraffe = PreyAgent(agent_id="g1", species="giraffe", pos=(0, 1), side="prey",
                          hp=units["giraffe"].hp, max_hp=units["giraffe"].hp, flock_id="f1")
     resolve_attack(tiger, giraffe, units)
-    assert giraffe.alive is False
+    assert giraffe.alive and giraffe.hp > 0
 
 
-def test_wolf_needs_two_hits_on_giraffe_and_wounds_persist():
+def test_wolf_wounds_persist_between_hits():
     units = load_units()
     wolf = PredatorAgent(agent_id="w1", species="wolf", pos=(0, 0), side="predator")
     giraffe = PreyAgent(agent_id="g1", species="giraffe", pos=(0, 1), side="prey",
@@ -25,11 +25,12 @@ def test_wolf_needs_two_hits_on_giraffe_and_wounds_persist():
 
     resolve_attack(wolf, giraffe, units)
     assert giraffe.alive is True
-    assert giraffe.hp == 40  # 100 - 60
+    assert giraffe.hp == 78
 
-    wolf.cooldown_remaining = 0  # simulate cooldown clearing on a later turn
+    wolf.begin_round()
+    giraffe.escape_guard = False  # prey completed its escape activation
     resolve_attack(wolf, giraffe, units)
-    assert giraffe.alive is False
+    assert giraffe.alive and giraffe.hp > 0
 
 
 def test_wolf_cooldown_is_per_wolf_not_pack_wide():
@@ -39,6 +40,7 @@ def test_wolf_cooldown_is_per_wolf_not_pack_wide():
     deer = PreyAgent(agent_id="d1", species="deer", pos=(0, 2), side="prey",
                       hp=units["deer"].hp, max_hp=units["deer"].hp, flock_id="f1")
 
+    deer.hp = 10  # guaranteed kill of a wounded target
     resolve_attack(wolf_a, deer, units)
     assert wolf_a.cooldown_remaining == 1
     assert wolf_b.cooldown_remaining == 0  # unaffected packmate

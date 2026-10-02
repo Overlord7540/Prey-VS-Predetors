@@ -1,74 +1,80 @@
-# AI Algorithms Spec (cleaned up from original notes)
+# Implemented AI
 
-Implemented in `src/ai/pathfinding.py` and `src/ai/fsm.py`.
+## Decisions versus state
 
-## Prey Movement — Normal State
+The default TacticalController and legacy RuleBasedController consume a detached Observation and returns an Action
+(destination, action kind, optional target ID). It cannot mutate live state. The simulation prepares fear
+states and shared goals through core/perception.py, validates movement, and
+resolves attacks/feeding. Pathfinding and policy choices do not mutate their
+inputs. All controllers currently receive full awareness, matching the existing
+prototype; observations must be filtered before claiming limited perception.
 
-- The initial path to a resource is the shortest route (BFS), and within
-  a flock, whichever prey is closest to that resource "leads" — the
-  whole flock adopts that prey's target and does not recompute a new
-  path until the resource is depleted.
-- If multiple prey are equidistant from *different* resources, one is
-  picked at random to lead.
-- Movement resolves sequentially within the flock, not simultaneously,
-  but the target tile is always the one set by the closest-to-resource
-  member regardless of move order.
+## Default tactical policy
 
-## Prey — Panic State
+Prey score each legal move and waiting against all predators. Immediate adjacency
+exposure costs 100 points per ready predator; predicted next-turn exposure costs
+30. Multi-source BFS supplies distance to reachable stocked food (2 points per
+step). Capped predator distance, escape-neighbor count and DESPAIR regrouping
+break tradeoffs. Safe food underfoot is consumed before moving elsewhere.
+Prediction checks the full legal predator movement range followed by adjacency, treating current
+occupancy as fixed. It is a heuristic, not a guaranteed safety forecast; attack
+damage and future prey movements are not modeled. PANIC/DESPAIR still update by
+the same simulation rules, and increase the preference for predator distance.
 
-**Trigger**: any flock member spots a predator. The closest prey to that
-predator enters PANIC (tie-break: closer to a resource wins).
+Wolves sharing a pack_id cooperate; unassigned wolves form one implicit team.
+A team chooses prey using summed shortest approach distances, then assigns
+unique reachable adjacent attack tiles in stable wolf-ID order. Equal-length
+routes prefer separation from assigned tiles. Assignments are recomputed from
+live snapshots for each action; earlier moves can change later assignments.
+Predators first select an explicit attack from reachable cells, preferring
+lower-HP unprotected prey and shorter movement. Otherwise wolves coordinate
+approaches and other predators hunt reachable target-adjacent cells. The legacy
+baseline retains solo intents.
 
-**Lockout**: once a prey enters PANIC, no other member of the flock may
-enter PANIC for the next `n` turns, where `n` = number of animals in the
-flock.
+Actions include a short reason, recorded by agent ID and shown on hover. These
+are descriptions of the policy decision, not claims of learning or reasoning
+from a language model. No neural network or training algorithm is included.
 
-**Movement (fcost)**: for each of up to 8 adjacent tiles, compute two
-rank-based scores (best candidate = 8, next = 7, ... not raw distance):
-- Score A: how much this move increases distance from the predator.
-- Score B: how much this move decreases distance to the nearest resource.
+## Baseline prey
 
-`fcost = Score A + Score B`. The move with the highest fcost is taken.
+BFS finds stocked resources. A* routes to a shared herd goal while excluding
+occupied tiles. If that route is blocked, BFS finds another accessible resource.
+Safe prey wait to eat stocked food underfoot. PANIC ranks legal neighboring
+moves and waiting by distance from the predator plus proximity to food.
+DESPAIR ranks distance from the predator plus proximity to the nearest living
+flockmate unless already within two tiles. Higher combined rank wins. Ties
+follow deterministic candidate order. There are up to nine candidates because
+waiting is included. See GDD.md for detection, lockout and recovery rules.
 
-## Prey — Despair State
+## Baseline predators
 
-**Trigger**: any flock member is attacked, or is within 2 tiles of the
-attacked member — the entire flock enters DESPAIR.
+At creation, a match-owned random generator selects CHASE, AMBUSH or CAMP,
+with double weight for the configured intent_bias. Target selection uses the
+closest living prey by Chebyshev distance; list order breaks ties.
+CHASE uses A* toward a target-adjacent tile. AMBUSH approaches the midpoint of
+the prey and its closest food. CAMP aims across the river and approaches prey
+within three tiles. Unreachable derived targets can still cause waiting.
+Adjacency attacks and cooldowns are simulation rules, not policy permissions.
 
-**Movement (fcost)**: only Score A (distance from predator) counts;
-resource-seeking is dropped entirely. A second term is added: minimize
-distance to the nearest flock-mate, *unless* that flock-mate is already
-within 2 tiles (in which case this term is zero, to avoid needless
-clumping).
+## Deferred systems
 
-## Predator — Target Selection
+step_predator_pack, the line-of-sight helpers, and influence_map are not wired
+into default gameplay. In the legacy baseline a pack_id prevents solo movement. They are
+not used by the new coordination policy in tactics.py. Neither controller has limited perception.
 
-The closest living prey unit, recalculated every move (not sticky).
+## Evaluation
 
-## Predator — Intent
+Use src.experiments.run for repeatable batches. Compare controllers under the
+same rules, initial seeds, round caps, and opponent policies. Report unfinished
+matches. Evaluate generalization on held-out seeds/scenarios before making
+claims about learned performance. No training algorithm is included yet.
 
-Each predator rolls one intent at the start of the match, from
-{Chase, Ambush, Camp}, used for its entire lifetime:
-- Tiger is weighted toward **Camp**.
-- Wolf is weighted toward **Ambush**.
+Choose `--controller baseline` or `--controller tactical` in the batch runner.
+The recorded controller name identifies the selected policy. A historical pre-tactical-combat 10-seed smoke
+comparison (seeds 0–9, cap 150 rounds) yielded baseline 7 predator / 3 prey wins
+and tactical 1 predator / 9 prey wins. Both sides changed together; this small
+sample is not evidence of balanced play or isolated policy superiority.
 
-- **Chase**: close the distance to the target using informed search (A*).
-- **Ambush**: find the target's nearest resource, take the midpoint
-  between the prey and that resource, and run Chase's algorithm toward
-  that midpoint tile instead of the prey directly.
-- **Camp**: sit in a hiding spot on the opposite side of the river from
-  the target. If the target crosses the river and comes within 3 tiles,
-  switch to Chase for the remainder of the approach.
-
-**Kill trigger**: once a predator kills any prey, it permanently switches
-to Chase for the rest of the match ("constant chase state").
-
-## Predator — Pack Coordination (Wolves only)
-
-- The pack's target tile is set by whichever wolf is closest to the prey.
-- The wolf that actually **executes** a move is the one *furthest* from
-  the prey (bringing stragglers up rather than piling the lead wolf in
-  further).
-- A candidate move is vetoed entirely if it would leave any pack member
-  3+ tiles away from the pack's closest-to-prey wolf — packs don't
-  outrun their own stragglers.
+After the movement/damage/escape update, seeds 0-7 (80-round cap) produced
+8 predator wins with 40-50 food consumed. This preliminary sample indicates
+predator-favored balance; it does not establish human-versus-AI difficulty.

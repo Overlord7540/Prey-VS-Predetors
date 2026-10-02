@@ -1,0 +1,31 @@
+{
+  "map": "maps/riverlands_large.json",
+  "predators": [
+    {"agent_id": "tiger_1", "species": "tiger", "pos": [4, 4]},
+    {"agent_id": "wolf_1", "species": "wolf", "pos": [16, 14]},
+    {"agent_id": "wolf_2", "species": "wolf", "pos": [16, 15]}
+  ],
+  "herds": [
+    {"flock_id": "deer_herd_0", "species": "deer", "center": [5, 10], "radius": 1, "count": 2},
+    {"flock_id": "deer_herd_1", "species": "deer", "center": [6, 16], "radius": 1, "count": 2},
+    {"flock_id": "deer_herd_2", "species": "deer", "center": [15, 6], "radius": 1, "count": 2}
+  ],
+  "starts": {
+    "dawn": {
+      "tiger_1": [4, 16],
+      "wolf_1": [16, 3],
+      "wolf_2": [16, 4],
+      "deer_herd_0": [5, 4],
+      "deer_herd_1": [6, 12],
+      "deer_herd_2": [15, 16]
+    },
+    "dusk": {
+      "tiger_1": [8, 2],
+      "wolf_1": [14, 16],
+      "wolf_2": [14, 17],
+      "deer_herd_0": [2, 10],
+      "deer_herd_1": [3, 16],
+      "deer_herd_2": [17, 8]
+    }
+  }
+}

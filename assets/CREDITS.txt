@@ -1,0 +1,17 @@
+Animals are the top-down poses cut from the generated sheets in ast/.
+The checkerboard background was removed, and each animal was saved as its own sprite.
+The deer has antlers, the tiger has stripes and a tail, the wolf has pointed ears,
+the buffalo has horns, and the giraffe has a long neck.
+
+Terrain is from the free Sprout Lands basic pack by Cup Nooble.
+https://cupnooble.itch.io/sprout-lands-asset-pack
+
+Credit: Assets from Sprout Lands, by Cup Nooble.
+
+The free pack may be used in a non-commercial project, and the tiles may be modified.
+It may not be sold, used in a commercial project, used for NFTs, or used to train an AI model.
+The asset pack itself may not be redistributed. This game may be shared with this credit.
+Open ground is the grass. Feeding grounds are the crops. Resource nodes are mushrooms, fruit, and a bush.
+The river is the water tile. Fords are tilled dirt. Rocks are the gray stone on grass.
+
+Tiles are 16×16 masters drawn at 32, 64, or 96 pixels. Small boards are 12×10. Large boards are 20×20, and the large skirmish is 12×12.

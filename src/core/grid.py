@@ -10,12 +10,15 @@ from __future__ import annotations
 from typing import Iterator, List, Tuple
 
 from src.data.loader import MapLayout, TileProps
+from src.core.rules import Rules
 
 Coord = Tuple[int, int]  # (row, col)
 
 
 class Grid:
     def __init__(self, layout: MapLayout, tile_defs: dict[str, TileProps]):
+        self.rules = Rules(**layout.win_conditions, **layout.behavior_rules)
+        self.river_row = layout.river_row
         self.width = layout.width
         self.height = layout.height
         self.tile_defs = tile_defs
@@ -27,11 +30,12 @@ class Grid:
     def _build_tiles(self, layout: MapLayout) -> List[List[str]]:
         tiles = [["open_field"] * layout.width for _ in range(layout.height)]
 
-        for c in range(layout.width):
-            tiles[layout.river_row][c] = "river"
-        for choke in layout.chokepoints:
-            for c in range(choke["col_start"], choke["col_end"] + 1):
-                tiles[layout.river_row][c] = "chokepoint"
+        if layout.river_row >= 0:
+            for c in range(layout.width):
+                tiles[layout.river_row][c] = "river"
+            for choke in layout.chokepoints:
+                for c in range(choke["col_start"], choke["col_end"] + 1):
+                    tiles[layout.river_row][c] = "chokepoint"
 
         for fg in layout.feeding_grounds:
             for r in range(fg["row"] - fg["radius"], fg["row"] + fg["radius"] + 1):
