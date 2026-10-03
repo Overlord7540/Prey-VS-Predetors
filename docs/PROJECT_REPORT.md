@@ -11,7 +11,7 @@ Date: 3 October 2026
 
 Prey vs Predators is a turn-based game in which hunters and a herd share one meadow, and, in a second mode, two predator packs fight on a closed board. The same match can be commanded by a person or by one of several artificial players. Three original players are always available. Calm takes the nearest gain. Wary scores sight, danger, food, and pack movement. Sharp is a small neural policy trained by REINFORCE. Five further players — logistic regression, a decision tree, a random forest, naive Bayes, and a Markov model — are trained only to imitate Wary’s tile choices, then graded on matches of their own.
 
-On the recorded Riverlands comparison (seeds 0–3, 40-round cap, both sides using the same player), Calm split 2–2, Wary won 3 of 4 as the hunters, and Sharp won all 4. Extra training raised Sharp’s episode score from about −0.09 to 0.28, and the hunter win count on those four seeds stayed at 4 of 4. The five imitators match Wary on 4% to 38% of held-out moves. Guessing a legal tile is about 4%. When both sides of a match use one imitator, the hunters won none of the four seeds. On the duel, tiger pack against jackals, Calm won 11 of 16 cross-play games, Wary 8, and Sharp 5.
+On the recorded Riverlands comparison (seeds 0–3, 40-round cap, both sides using the same player), Calm won all 4 as the hunters, Wary split 2–2, and Sharp won all 4. The saved training curve still rises from about −0.09 to 0.28 across 80 episodes, and those weights were not retrained for this measurement. Playing them on the current rules, Sharp still wins 4 of 4. The five imitators match Wary on 4% to 38% of held-out moves. Guessing a legal tile is about 4%. When both sides of a match use one imitator, the hunters won 19 of 20 games. On the duel, across 16 cross-play games, Calm won 11, Sharp won 7, and Wary won 4. Two of Calm’s games and two of Sharp’s did not finish inside 8 rounds.
 
 The simulation does not import the display library. Pygame draws the board. Matplotlib draws the charts. A Windows executable is built from the same entry point.
 
@@ -86,13 +86,13 @@ Species on the meadow:
 | Tiger | Hunter | — | 3 | 32±10 | Solitary |
 | Wolf | Hunter | — | 2 | 22±6 | Pack. Cooldown 1 after a kill |
 | Jackal | Hunter | — | 2 | 16±4 | Pack of two on Rookery |
-| Deer | Herd | 40 | 2 | — | Can spend 1 step in water |
-| Buffalo | Herd | 60 | 2 | — | Can spend 2 steps in the river. Stopping in the channel adds 8 exposure to incoming damage. Eats 2 |
+| Deer | Herd | 40 | 2 | — | Water costs one extra movement point |
+| Buffalo | Herd | 60 | 2 | — | Crosses water at the normal step cost. Eats 2 |
 | Giraffe | Herd | 100 | 2 | — | Heals 10 at the start of its activation on Basin |
 | Hare | Herd | 24 | 2 | — | Panic range 8 |
 | Heron | Herd | 28 | 1 | — | Sight 8 |
 
-A straight step costs 1. A diagonal step costs 2. Occupied tiles are blocked. A diagonal cannot squeeze between two blocked corners. Hunters do not enter the river. Buffalo may. The first damaging hit on an animal at full health cannot kill it if it has more than 1 health. The survivor bolts to a reachable tile that maximizes distance from living hunters, and other hunters cannot target it until its next activation.
+A straight step costs 1. A diagonal step costs 2. A step onto water costs one more, except for a buffalo, who pays the normal cost. An animal that cannot otherwise afford that step may spend its whole move to wade one tile. Occupied tiles are blocked. A diagonal cannot squeeze between two blocked corners. Prey standing on water cannot be bitten. In the duel, deep river is still a wall and only the ford can be crossed. The first damaging hit on a meadow animal at full health cannot kill it if it has more than 1 health. The survivor bolts to a reachable tile that maximizes distance from living hunters, and other hunters cannot target it until its next activation.
 
 Fear is a herd state, not a replacement for the person’s command. Nearby hunters can push a flock from calm into panic, and a blow can push it into despair. Despair prefers distance from hunters and closeness to a living flockmate. Wary’s prey score uses those states. The person’s click does not.
 
@@ -102,12 +102,12 @@ The duel is three against three.
 
 | Name | Body | Side | Health | Move | Damage |
 | --- | --- | --- | --- | --- | --- |
-| Sable | Tiger | Tiger pack | 48 | 3 | 32±10 |
-| Ash | Wolf | Tiger pack | 36 | 4 | 22±6 |
-| Birch | Wolf | Tiger pack | 36 | 4 | 22±6 |
-| Cinder | Jackal | Jackals | 36 | 4 | 20±6 |
-| Nettle | Jackal | Jackals | 36 | 4 | 20±6 |
-| Bramble | Jackal | Jackals | 42 | 3 | 22±6 |
+| Sable | Tiger | Tiger pack | 48 | 3 | 16±4 |
+| Ash | Wolf | Tiger pack | 36 | 4 | 14±3 |
+| Birch | Wolf | Tiger pack | 36 | 4 | 14±3 |
+| Cinder | Jackal | Jackals | 36 | 4 | 14±3 |
+| Nettle | Jackal | Jackals | 36 | 4 | 14±3 |
+| Bramble | Jackal | Jackals | 42 | 3 | 14±3 |
 
 Internally the sides are still called hunter and herd, so the battle network’s side bit does not have to change. The screen says Tiger pack and Jackals.
 
@@ -254,7 +254,7 @@ Each model scores every legal tile. The highest score is its choice. Accuracy is
 
 The Markov model is the only one with memory of the previous step. Its situation is coarse: whether the tile has food, and banded values for enemy distance, influence, and side. On this small holdout it did not beat guessing.
 
-Copying a tile is not the same as winning a match. After the weights were frozen, each imitator played both sides of seeds 0–3 for up to 40 rounds. The hunters won none of those 16 games. Logistic regression finished two for the herd and left two unfinished. The tree and the Markov model left all four unfinished. The forest left three unfinished and lost one to the herd. Naive Bayes lost three to the herd and left one unfinished. The Field notes say both facts: the copy rate, and the win count.
+Copying a tile is not the same as winning a match. After the weights were frozen, each imitator played both sides of seeds 0–3 for up to 40 rounds. That is 20 games. Under the current bite check the hunters won 19. Logistic regression lost one to the herd. The other four copies won all four of their seeds as the hunters. The Field notes say both facts: the copy rate, and the win count. The counts are in Section 10.3.
 
 ---
 
@@ -262,11 +262,11 @@ Copying a tile is not the same as winning a match. After the weights were frozen
 
 Calm in the duel is a script. It advances, attacks when a blow is legal, and holds when the advance is not useful.
 
-Wary in the duel is a two-ply search. For each legal move or attack it copies the board, applies the action, and scores the result against the best reply it can see. The score prefers expected damage dealt, then penalizes the opponent’s best answer. Progress down the board and useless drifting are part of the key. When no enemy is visible, ford destinations are removed if any other tile exists.
+Wary in the duel is a two-ply search. For each legal move or attack it copies the board, applies the action, and scores the result against the best reply it can see. The score prefers expected damage dealt, then penalizes the opponent’s best answer. Progress down the board and useless drifting are part of the key. When no enemy is visible, ford destinations are removed if any other tile exists. If the chosen action neither strikes nor moves closer, the fighter steps toward a visible enemy. If no enemy is visible and the action is not already moving forward, it steps along its bearing and does not finish that step on the ford. Sharp uses the same closing step after its network picks an action.
 
 Sharp in the duel is the 9-input network above. Play is again the highest score. Training samples from the softmax.
 
-Cross-play is every pairing. For seeds 0–3, each player meets each of the other two, once on each side. That is 16 games per player. The cap is 8 rounds. Every recorded game finished.
+Cross-play is every pairing. For seeds 0–3, each player meets each of the other two, once on each side. That is 16 games per player. The cap is 8 rounds. A game that has not cleared a side by then is unfinished. One blow no longer removes a fighter: the tiger’s damage is 16±4, and every other fighter’s is 14±3.
 
 ---
 
@@ -280,11 +280,11 @@ Board: Riverlands through the headless scenario loader, 12×10, Noon layout. Thi
 
 | Player | Hunter wins | Herd wins | Unfinished | Mean prey left | Mean food eaten |
 | --- | --- | --- | --- | --- | --- |
-| Calm | 2 | 2 | 0 | 2.75 | 21.00 |
-| Wary | 3 | 1 | 0 | 2.00 | 21.25 |
-| Sharp | 4 | 0 | 0 | 1.00 | 13.75 |
+| Calm | 4 | 0 | 0 | 0.75 | 14.50 |
+| Wary | 2 | 2 | 0 | 2.50 | 20.00 |
+| Sharp | 4 | 0 | 0 | 0.75 | 8.25 |
 
-Sharp’s four wins took 8, 6, 6, and 7 rounds, and each ended with one prey still alive. That is the elimination threshold, not a total wipe. The herd ate less food in those short matches, which is why the food column is lower. A lower food number here means the match ended before the herd could finish eating. It does not mean Sharp is a better forager.
+Sharp’s four wins took 8, 6, 12, and 10 rounds. Three ended with one prey still alive, which is the elimination threshold. The fourth cleared the herd. The herd ate less food in those short matches, which is why the food column is lower. A lower food number here means the match ended before the herd could finish eating. It does not mean Sharp is a better forager.
 
 Figures: `results/figures/win_rates.png`, `results/figures/prey_and_food.png`, `results/figures/training_curve.png`. The numbers are in `results/comparison.json`.
 
@@ -294,12 +294,13 @@ The evaluation is seeds 0–3, 40-round cap, both sides Sharp, on the same River
 
 | | Hunter wins |
 | --- | --- |
-| After the first 20 episodes | 4 of 4 |
-| After 60 more episodes (80 stored) | 4 of 4 |
+| After the first 20 episodes, stored in the weights file | 4 of 4 |
+| After 60 more episodes (80 stored), stored in the weights file | 4 of 4 |
+| The same 80-episode weights, replayed on the current rules | 4 of 4 |
 
 The training score, which is the hunter return above, started at −0.09. It was 0.06 at episode 20. It was 0.28 at episode 80. The curve is noisy. Single episodes still swing from about −1.5 to about 1.5, because a win and a loss dominate the return and the credit is spread across every move.
 
-The honest reading is that the extra episodes moved the training score up, and they did not change the win count on this four-seed test. Sharp was already winning all four before the resume. Four seeds cannot show a finer improvement.
+The stored before-and-after pair was measured before water cost an extra point and before Riverlands food was moved toward the herd. The network was not retrained afterward. Replaying the saved weights on the current board is still 4 of 4, which is the Sharp row in Section 10.1. Four seeds cannot show a finer improvement.
 
 ### 10.3 Imitators, copy score and match score
 
@@ -307,13 +308,13 @@ Held-out tile match is Section 8. Match results, both sides the same imitator, s
 
 | Model | Hunter wins | Herd wins | Unfinished |
 | --- | --- | --- | --- |
-| Logistic regression | 0 | 2 | 2 |
-| Decision tree | 0 | 0 | 4 |
-| Random forest | 0 | 1 | 3 |
-| Naive Bayes | 0 | 3 | 1 |
-| Markov model | 0 | 0 | 4 |
+| Logistic regression | 3 | 1 | 0 |
+| Decision tree | 4 | 0 | 0 |
+| Random forest | 4 | 0 | 0 |
+| Naive Bayes | 4 | 0 | 0 |
+| Markov model | 4 | 0 | 0 |
 
-A model can imitate Wary on a third of held-out moves and still fail to close a match. Wary’s strength is the whole policy, including attacks and the second-best reasoning around food. The imitators only see the chosen tile’s features. They do not receive Wary’s reason, and they do not plan past one step. The Markov model, which does keep a previous direction, was the weakest copy on this sample.
+The copy rates were not refit. What changed is play. Sharp and these five copies now take an obvious bite and will not step onto a tile beside a ready hunter when another tile is open. Under that rule the hunters won 19 of the 20 games. Logistic regression was the only copy the herd beat, once. A high copy rate is still not the same thing as Wary’s match: the tree copies Wary on 37.5% of held-out tiles, and on these four seeds it finishes as the hunter, while Wary itself splits 2–2. The Markov model remains the weakest copy. It did not beat guessing, and the bite check is what closes its matches.
 
 ### 10.4 Duel, tiger pack against jackals
 
@@ -323,11 +324,11 @@ Board: the default small Ford skirmish. Roster: Sable, Ash, Birch against Cinder
 
 | Player | Wins | Losses | Unfinished | Mean own health left | Mean other side’s health left |
 | --- | --- | --- | --- | --- | --- |
-| Calm | 11 | 5 | 0 | 28.2 | 5.8 |
-| Wary | 8 | 8 | 0 | 17.4 | 26.2 |
-| Sharp | 5 | 11 | 0 | 13.3 | 26.8 |
+| Calm | 11 | 3 | 2 | 27.0 | 8.5 |
+| Wary | 4 | 12 | 0 | 9.3 | 24.6 |
+| Sharp | 7 | 7 | 2 | 9.9 | 13.2 |
 
-Calm is the strongest of the three on this measurement. Sharp is the weakest. That is the opposite of the meadow table, and it should be. The duel network was trained for 12 episodes and was not retrained after the opposing pack became jackals. The meadow network was trained for 80 episodes on Riverlands, which is a different game. Sharing the nickname Sharp does not mean the two networks share weights.
+Calm still has the most wins. Sharp splits the games it finishes. Wary loses 12 of 16. That order is not the meadow order. The duel network was trained for 12 episodes and was not retrained after the opposing pack became jackals, after damage was lowered, or after the closing step was added. The meadow network was trained for 80 episodes on Riverlands, which is a different game. Sharing the nickname Sharp does not mean the two networks share weights. Two Calm games and two Sharp games reached the 8-round cap with both sides still alive.
 
 Figures: `results/figures/battle_wins.png`, `results/figures/battle_health.png`, `results/figures/battle_training.png`. The games are in `results/battle_comparison.json`.
 
@@ -335,13 +336,13 @@ Figures: `results/figures/battle_wins.png`, `results/figures/battle_health.png`,
 
 ## 11. Discussion
 
-The meadow ranking matches the design. Calm wins some matches because nearest-food and nearest-prey are already reasonable on an open board. Wary wins more as the hunter because it will not spend the turn on a tile that is merely nearby, and because the wolves share an approach. Sharp wins the four recorded seeds because self-play on this map, with a hunter-shaped return, rewards finishing the herd before the food is gone. Its matches are shorter and the herd eats less. That is a hunter-favored policy, not evidence that the herd side failed to learn. The herd is trained by the negated advantage, so a herd win does teach the herd samples. The return’s shape still cares more about hunter victory than about a long, careful feeding game.
+On this Riverlands sample, Calm and Sharp both finish as the hunters, and Wary splits. Sharp’s matches are the shortest and the herd eats the least. That is a hunter-favored policy, not evidence that the herd side failed to learn. The herd is trained by the negated advantage, so a herd win does teach the herd samples. The return’s shape still cares more about hunter victory than about a long, careful feeding game. Wary is the player that actually uses the food: its mean food eaten is 20, against Sharp’s 8.25.
 
-The imitators are the right lesson for a laboratory and a weak lesson if someone expects them to replace Wary. They are supervised copies of one player’s tiles. Four of five beat chance, which is the claim the training procedure was built to test. Their match record, zero hunter wins, is the claim a separate play grade was built to test. Both belong in the report. Reporting only the 37% tree accuracy would hide the fact that the tree did not finish a game.
+The imitators are the right lesson for a laboratory and a weak lesson if someone expects the copy rate to predict the match. Four of five beat chance, which is the claim the training procedure was built to test. Their match record is a second claim. Under the current bite check the hunters win 19 of 20 games, including the Markov model, which did not beat chance. Reporting only the 37.5% tree accuracy would hide both the weak copy and the hunter sweep.
 
-The duel ranking is a warning against reusing a nickname. Twelve episodes of battle self-play, measured later on the jackal roster, do not beat a short script. Search lands in the middle. A two-ply reply is enough to avoid some bad trades and not enough, on this sample, to beat Calm’s direct advance. The sample is 16 games. It is large enough to see the order Calm, then Wary, then Sharp. It is not large enough to quote a stable percentage for a larger tournament.
+The duel ranking is a warning against reusing a nickname. Twelve episodes of battle self-play do not beat Calm’s script. Search, which refuses a blow whose visible reply is worse, loses 12 of 16 once fighters are also pushed to close. Sharp lands in the middle and ties its finished games. The sample is 16 games. It is large enough to see that Calm is ahead and that Wary is not. It is not large enough to quote a stable percentage for a larger tournament.
 
-Several meadow maps still lean. Ford with Wary, and the small Basin with Wary, favor the hunters more than a coin flip. The large Basin with Calm often eats very little. Those leans were left in place after earlier layout changes started to make other maps a sweep. The four-seed Riverlands table should not be read as a balance certificate for every clearing.
+Other boards do not copy the Riverlands table. On the large Riverlands board the window opens on, Wary at noon goes to the herd and Sharp goes to the hunters. On Basin, Sharp splits and Wary goes to the herd. Rookery is the closest of the small boards. Glade, Rocks, and Ford are lessons and were left able to lean. The four-seed Riverlands table is not a balance certificate for every clearing.
 
 Sharp’s idle step on unseen ground is a play rule, not a weight. It stops the Rookery dusk freeze, where both jackals waited on the north bank because “stay” won by a hair and the herd was out of sight. It does not retrain the network.
 
@@ -373,7 +374,7 @@ Tests cover movement costs, sight, combat, the escape after a non-lethal hit, me
 ## 13. Limits
 
 - The published meadow chart is four seeds on the 12×10 Riverlands loader. The window’s default Riverlands is 20×20. A result on one board is not a result on the other.
-- Sharp’s win count did not move when training went from 20 to 80 episodes, because it was already 4 of 4. A larger seed set would be required to see anything smaller than a sweep.
+- Sharp’s win count on these four seeds is still 4 of 4 after 80 episodes, including a replay under the current water cost and the moved Riverlands food. A larger seed set would be required to see anything smaller than a sweep. The stored 4-of-4 pair from the 20-episode checkpoint was measured before those rule changes.
 - The five models were fit on 96 decisions. That is enough to beat a 4% chance on a 24-decision holdout. It is not a large behavioral clone of Wary.
 - The duel network was not retrained for the jackal roster. Its chart is a measurement of the saved 12-episode weights.
 - Human games are not a training set.
@@ -386,7 +387,7 @@ Tests cover movement costs, sight, combat, the escape after a non-lethal hit, me
 
 The project is a playable game whose difficulties are distinct algorithms, plus a record of what those algorithms did under a fixed seed list.
 
-On the meadow, greedy play splits the four Riverlands seeds, scored tactics win three as the hunter, and the neural policy wins all four. Continuing training raised the episode score and left that sweep unchanged. Five classical models can be shown, in one sentence each, to copy Wary better than chance or not, and in a second sentence to fail as hunters when they have to play the match themselves. On the duel, the script beats the search, and the search beats the small battle network.
+On the meadow, Calm and Sharp win all four Riverlands seeds as the hunters, and Wary splits its four. Continuing training raised the episode score. Replaying the saved weights under the current rules left Sharp’s sweep unchanged. Five classical models can be shown, in one sentence each, to copy Wary better than chance or not, and in a second sentence to win as the hunters once the obvious bite is allowed. On the duel, Calm has the most wins, Sharp splits, and the two-ply search loses most of its games.
 
 That split is the result the laboratory can stand on. Each method is visible in the menu, explained in Field notes, and backed by a JSON file and a figure. The simulation that produces those files does not depend on the window that plays them.
 
@@ -428,7 +429,7 @@ Each entry says where the code lives, when it runs, and how it is used. “Play�
 
 ### Shared by every animal, including the person
 
-**Uniform-cost move range.** `src/core/movement.py`. Used whenever anyone asks which tiles an animal can reach: the person’s highlights, Calm, Wary, Sharp, and the five imitators. A frontier spreads from the animal. A straight step costs 1 and a diagonal costs 2. Occupied tiles and blocked corners are skipped. Buffalo may spend a limited number of steps in the river. The search stops when the movement budget is spent.
+**Uniform-cost move range.** `src/core/movement.py`. Used whenever anyone asks which tiles an animal can reach: the person’s highlights, Calm, Wary, Sharp, and the five imitators. A frontier spreads from the animal. A straight step costs 1 and a diagonal costs 2. A step onto water costs one more, except for a buffalo. A first straight step onto water may spend the whole move, so a heron can wade one tile. Occupied tiles and blocked corners are skipped. A duel fighter has no water step, so deep river stays blocked. The search stops when the movement budget is spent.
 
 **Chebyshev distance.** `src/core/grid.py`. Used whenever the game asks “how many king-steps apart are these two tiles?” Attack range is a distance of 1. Calm picks the nearest prey with it. The feature vectors divide a Chebyshev distance by sight range.
 
@@ -492,13 +493,13 @@ All five live in `src/ai/classical/models.py` and are driven by `src/ai/classica
 
 **Holdout check.** Used once, at the end of imitator training. Accuracy is how often the highest-scoring tile is the tile Wary chose, on the last fifth of the recorded moves. Chance is the average of one divided by the number of legal tiles. “Improved” means accuracy is more than two points above that chance.
 
-**Match grade.** `grade_table_play`. Used after the weights are frozen. Each imitator plays both sides of seeds 0–3 for up to 40 rounds. The hunter win count is stored beside the copy score. Fitting is not repeated.
+**Match grade.** `grade_table_play`. Used after the weights are frozen. Each imitator plays both sides of seeds 0–3 for up to 40 rounds. The hunter win count is stored beside the copy score. Fitting is not repeated. The grade in this report was replayed after the obvious-bite check; the copy rates were left as saved.
 
 ### Duel only
 
 **Scripted fighter.** `src/ai/battle_rules.py`. This is Calm in the duel. On that fighter’s activation it advances toward the other side, attacks when a blow is legal, and holds when the advance does not help.
 
-**Two-ply search.** `src/ai/battle_search.py`. This is Wary in the duel. On that fighter’s activation every legal move and every legal attack is tried on a copy of the board. The copy is scored by expected damage, then by the best reply the visible enemy can make, then by progress and by how much the step drifts. The action with the best key is taken.
+**Two-ply search.** `src/ai/battle_search.py`. This is Wary in the duel. On that fighter’s activation every legal move and every legal attack is tried on a copy of the board. The copy is scored by expected damage, then by the best reply the visible enemy can make, then by progress and by how much the step drifts. The action with the best key is taken. If that action neither strikes nor closes, the fighter steps toward a visible enemy, or, when none is visible, forward along its bearing without stopping on the ford. Sharp’s duel network uses the same closing step after it scores its actions.
 
 **Expected damage.** Inside that search. The blow’s average, reduced when the target stands on a ford. It is an average of the damage range, not a roll. The real roll happens later, in the simulation, if the action is actually played.
 

@@ -25,7 +25,7 @@ from src.core.perception import prepare_prey, update_flocks
 from copy import deepcopy
 import random
 from src.core.agent import Flock, Pack, PredatorAgent, PreyAgent, PreyState
-from src.core.combat import WATER_EXPOSURE, resolve_attack, damage_range
+from src.core.combat import resolve_attack, damage_range
 from src.core.movement import escape_destination, reachable_paths
 from src.core.grid import Grid
 from src.data.loader import UnitStats
@@ -180,8 +180,9 @@ class Simulation:
     def _attack(self, pred, prey_unit) -> bool:
         if self.grid.chebyshev_distance(pred.pos, prey_unit.pos) != 1:
             return False
-        exposure = WATER_EXPOSURE if self._exposed_in_river(prey_unit) else 0
-        damage = resolve_attack(pred, prey_unit, self.unit_stats, self.rng, exposure)
+        if self._standing_in_water(prey_unit):
+            return False
+        damage = resolve_attack(pred, prey_unit, self.unit_stats, self.rng, 0)
         if damage <= 0:
             return False
         struck = prey_unit.pos
@@ -215,10 +216,8 @@ class Simulation:
             if prey_unit.alive:
                 self._act_prey(prey_unit)
 
-    def _exposed_in_river(self, prey_unit) -> bool:
-        stats = self.unit_stats[prey_unit.species]
-        tile = self.grid.tiles[prey_unit.pos[0]][prey_unit.pos[1]]
-        return stats.vulnerable_at_water_midtile and tile == "river"
+    def _standing_in_water(self, prey_unit) -> bool:
+        return self.grid.tile_props(prey_unit.pos).is_water
 
     def _act_prey(self, prey_unit, action=None) -> None:
         stats = self.unit_stats[prey_unit.species]
@@ -284,6 +283,7 @@ class Simulation:
         if actor is None or not actor.can_attack():
             return []
         return [p for p in self.prey if p.alive and not p.escape_guard
+                and not self._standing_in_water(p)
                 and self.grid.chebyshev_distance(destination, p.pos) == 1]
 
     def attack_preview(self, agent_id, target_id, destination):

@@ -8,7 +8,7 @@
   ],
   "feeding_grounds": [
     {"row": 8, "col": 4, "radius": 1},
-    {"row": 8, "col": 15, "radius": 1},
+    {"row": 17, "col": 8, "radius": 1},
     {"row": 12, "col": 5, "radius": 1},
     {"row": 12, "col": 14, "radius": 1}
   ],

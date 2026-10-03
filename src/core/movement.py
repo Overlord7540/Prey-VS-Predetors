@@ -24,45 +24,51 @@ def escape_destination(grid, actor, agents, stats, threats):
 
 def reachable_paths(grid, actor, agents, stats):
     budget = stats.move_range + (2 if getattr(actor, "adrenaline", False) else 0)
-    crosses_water = getattr(stats, "vulnerable_at_water_midtile", False)
-    water_budget = stats.water_move_range if crosses_water else 0
+    # Meadow animals wade. A duel fighter has no water budget and still treats the river as a wall.
+    wades = hasattr(stats, "water_move_range")
+    swift = _buffalo(actor, stats)
     blocked = {a.pos for a in agents if a.alive and a.agent_id != actor.agent_id}
     paths = {actor.pos: (actor.pos,)}
     costs = {actor.pos: 0}
-    water_used = {actor.pos: 0}
     queue = [(0, actor.pos)]
     while queue:
         cost, pos = heapq.heappop(queue)
         if cost != costs[pos]:
             continue
         for nxt in grid.neighbors(pos):
-            if nxt in blocked or not _can_enter(grid, nxt, crosses_water):
+            if nxt in blocked or not _can_enter(grid, nxt, wades):
                 continue
             # Do not squeeze diagonally between impassable/occupied cells.
             if pos[0] != nxt[0] and pos[1] != nxt[1]:
                 corners = ((pos[0], nxt[1]), (nxt[0], pos[1]))
                 if any(not grid.is_passable(p) or p in blocked for p in corners):
                     continue
-            river = _is_river(grid, nxt)
-            spent_water = water_used[pos] + (1 if river else 0)
-            if spent_water > water_budget:
-                continue
-            nxt_cost = cost + step_cost(pos, nxt)
+            nxt_cost = cost + _step_cost(grid, pos, nxt, swift)
+            # Spend the whole move to wade one tile. Otherwise a heron could not enter water at all.
+            if (nxt_cost > budget and cost == 0 and not swift
+                    and grid.tile_props(nxt).is_water and step_cost(pos, nxt) == 1):
+                nxt_cost = budget
             if nxt_cost > budget or nxt_cost >= costs.get(nxt, budget + 1):
                 continue
             costs[nxt] = nxt_cost
-            water_used[nxt] = spent_water
             paths[nxt] = paths[pos] + (nxt,)
             heapq.heappush(queue, (nxt_cost, nxt))
     return paths
 
 
-def _can_enter(grid, pos, crosses_water) -> bool:
+def _buffalo(actor, stats) -> bool:
+    return getattr(actor, "species", None) == "buffalo" or getattr(stats, "name", None) == "buffalo"
+
+
+def _step_cost(grid, origin, destination, swift: bool) -> int:
+    """Water costs one extra movement point. A buffalo pays the normal step."""
+    paying = step_cost(origin, destination)
+    if grid.tile_props(destination).is_water and not swift:
+        paying += 1
+    return paying
+
+
+def _can_enter(grid, pos, wades: bool) -> bool:
     if grid.is_passable(pos):
         return True
-    return crosses_water and _is_river(grid, pos)
-
-
-def _is_river(grid, pos) -> bool:
-    props = grid.tile_props(pos)
-    return props.is_water and not props.passable
+    return wades and grid.is_enterable(pos)

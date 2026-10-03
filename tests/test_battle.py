@@ -25,12 +25,12 @@ def test_skirmish_is_a_tiger_pack_against_three_jackals():
     assert [fighter.body for fighter in herd] == ["jackal", "jackal", "jackal"]
     sable, ash, birch = hunters
     cinder, nettle, bramble = herd
-    assert (sable.hp, sable.move_range, sable.damage, sable.damage_spread) == (48, 3, 32, 10)
-    assert (ash.hp, ash.move_range, ash.damage, ash.damage_spread) == (36, 4, 22, 6)
+    assert (sable.hp, sable.move_range, sable.damage, sable.damage_spread) == (48, 3, 16, 4)
+    assert (ash.hp, ash.move_range, ash.damage, ash.damage_spread) == (36, 4, 14, 3)
     assert birch.hp == ash.hp and birch.damage == ash.damage
-    assert (cinder.hp, cinder.move_range, cinder.damage, cinder.damage_spread) == (36, 4, 20, 6)
-    assert (nettle.hp, nettle.move_range, nettle.damage) == (36, 4, 20)
-    assert (bramble.hp, bramble.move_range, bramble.damage, bramble.damage_spread) == (42, 3, 22, 6)
+    assert (cinder.hp, cinder.move_range, cinder.damage, cinder.damage_spread) == (36, 4, 14, 3)
+    assert (nettle.hp, nettle.move_range, nettle.damage) == (36, 4, 14)
+    assert (bramble.hp, bramble.move_range, bramble.damage, bramble.damage_spread) == (42, 3, 14, 3)
     for fighter in hunters:
         assert fighter.pos[0] < battle.grid.river_row
         assert battle.grid.is_passable(fighter.pos)

@@ -475,6 +475,7 @@ def main() -> None:
         else:
             renderer.draw(canvas)
             player.draw(canvas, renderer)
+            renderer.draw_result(canvas)
             # Rebuild after input: label/enabled state and click regions stay in sync.
             buttons = game_buttons(renderer, detailed, paused)
             draw_buttons(canvas, renderer, player, buttons, logical_mouse)

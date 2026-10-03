@@ -31,6 +31,28 @@ def describe_agent(agent, label):
     return lines
 
 
+def result_notice(sim) -> tuple[str, str] | None:
+    """Victory or defeat for the side being played. A watched match names the winner."""
+    winner = getattr(sim, "winner", None)
+    if not winner:
+        return None
+    if getattr(sim, "kind", "") == "skirmish":
+        yours = {"predator": "hunter", "prey": "herd"}.get(getattr(sim, "player_side", None))
+        detail = "The other side is cleared."
+        if yours == winner:
+            return "Victory", detail
+        if yours:
+            return "Defeat", detail
+        return ("Tiger pack wins" if winner == "hunter" else "Jackals win"), detail
+    detail = "The herd is broken." if winner == "predator" else "The herd ate enough."
+    yours = getattr(sim, "player_side", None)
+    if yours == winner:
+        return "Victory", detail
+    if yours:
+        return "Defeat", detail
+    return ("Hunters win" if winner == "predator" else "The herd wins"), detail
+
+
 def action_caption(sim, labels):
     record = sim.last_action
     if record is None:

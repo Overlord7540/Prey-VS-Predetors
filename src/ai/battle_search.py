@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 
 from src.core.battle_match import COVER, BattleAction, BattleView, Combatant, engagement
+from src.core.grid import Grid
 
 REASON = "Search"
 
@@ -18,7 +19,47 @@ class SearchBattleController:
             if best_key is None or key > best_key:
                 best_key = key
                 best_action = action
-        return best_action
+        return approach_if_holding(view, best_action, REASON)
+
+
+def approach_if_holding(view: BattleView, action: BattleAction, reason: str) -> BattleAction:
+    """Walk in when the choice neither strikes nor closes. A blind step stays off the ford."""
+    if action is None or action.target is not None:
+        return action
+    if not view.enemies:
+        gained = view.bearing * (action.destination[0] - view.actor.pos[0])
+        held_ford = view.grid.tiles[action.destination[0]][action.destination[1]] == "chokepoint"
+        if gained > 0 and not held_ford:
+            return action
+        forward = [
+            tile for tile in view.legal_destinations
+            if view.bearing * (tile[0] - view.actor.pos[0]) > 0
+            and view.grid.tiles[tile[0]][tile[1]] != "chokepoint"
+        ]
+        if not forward:
+            return action
+        destination = max(forward, key=lambda tile: (
+            view.bearing * (tile[0] - view.actor.pos[0]),
+            -abs(tile[1] - view.actor.pos[1]),
+            tile,
+        ))
+        return BattleAction(destination, None, reason)
+    nearest = min(view.enemies, key=lambda enemy: (Grid.chebyshev_distance(view.actor.pos, enemy.pos), enemy.name))
+    current = Grid.chebyshev_distance(view.actor.pos, nearest.pos)
+    if Grid.chebyshev_distance(action.destination, nearest.pos) < current:
+        return action
+    closer = [
+        tile for tile in view.legal_destinations
+        if Grid.chebyshev_distance(tile, nearest.pos) < current
+    ]
+    if not closer:
+        return action
+    destination = min(closer, key=lambda tile: (
+        Grid.chebyshev_distance(tile, nearest.pos),
+        abs(tile[0] - view.actor.pos[0]) + abs(tile[1] - view.actor.pos[1]),
+        tile,
+    ))
+    return BattleAction(destination, None, reason)
 
 
 def _candidates(view: BattleView) -> list[BattleAction]:

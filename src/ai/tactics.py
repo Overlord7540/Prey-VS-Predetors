@@ -12,7 +12,9 @@ def distances(grid, starts, blocked):
     queue = deque(result)
     while queue:
         pos = queue.popleft()
-        for nxt in grid.passable_neighbors(pos):
+        for nxt in grid.neighbors(pos):
+            if not grid.is_enterable(nxt):
+                continue
             if nxt not in blocked and nxt not in result:
                 result[nxt] = result[pos] + 1
                 queue.append(nxt)

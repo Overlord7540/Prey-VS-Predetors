@@ -207,6 +207,32 @@ def test_the_decision_book_sits_beside_the_glade():
         assert not notes.colliderect(rect)
 
 
+def test_a_finished_match_shows_victory_or_defeat():
+    from src.rendering.identity import result_notice
+    from src.rendering.skirmish import SkirmishMatch
+
+    sim = build_default_scenario(seed=1)
+    sim.player_side = "predator"
+    sim.winner = "predator"
+    assert result_notice(sim) == ("Victory", "The herd is broken.")
+    sim.winner = "prey"
+    assert result_notice(sim) == ("Defeat", "The herd ate enough.")
+    sim.player_side = None
+    assert result_notice(sim) == ("The herd wins", "The herd ate enough.")
+
+    match = SkirmishMatch("rules", 1, "hunter")
+    match.winner = "herd"
+    assert result_notice(match) == ("Defeat", "The other side is cleared.")
+    match.player_side = None
+    assert result_notice(match)[0] == "Jackals win"
+
+    renderer = Renderer(sim, AssetManager())
+    canvas = pygame.Surface(renderer.screen_size())
+    renderer.draw(canvas)
+    renderer.draw_result(canvas)
+    assert "The herd wins" in [item[0] for item in renderer.text_items]
+
+
 def test_a_planned_duel_step_draws_the_fighter():
     from src.rendering.skirmish import SkirmishMatch
     match = SkirmishMatch("rules", 1, "hunter")

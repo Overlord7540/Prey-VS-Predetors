@@ -16,7 +16,7 @@
     {
       "flock_id": "heron_bank",
       "species": "heron",
-      "center": [3, 9],
+      "center": [5, 9],
       "radius": 0,
       "count": 1
     },
@@ -32,14 +32,14 @@
     "dawn": {
       "jackal_1": [2, 8],
       "jackal_2": [2, 9],
-      "heron_bank": [3, 1],
+      "heron_bank": [5, 1],
       "hares": [8, 2],
       "deer_west": [8, 8]
     },
     "dusk": {
       "jackal_1": [1, 5],
       "jackal_2": [1, 6],
-      "heron_bank": [3, 8],
+      "heron_bank": [5, 8],
       "hares": [9, 6],
       "deer_west": [8, 1]
     }

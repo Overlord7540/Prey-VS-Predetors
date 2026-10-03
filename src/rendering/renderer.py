@@ -10,7 +10,7 @@ import pygame
 from collections import deque
 
 from src.core.simulation import Simulation
-from src.rendering.identity import build_labels, describe_agent
+from src.rendering.identity import build_labels, describe_agent, result_notice
 from src.rendering.viewport import window_to_canvas
 from src.rendering.camera import Camera
 from src.rendering.chrome import INK, MOSS, MUTED, PAPER, SIGNAL, TRACK, card, round_rect
@@ -41,7 +41,7 @@ def goal_alpha(age: float, hold: float = 4.2, fade: float = 0.8) -> int:
 LESSONS = {
     "glade": "Pale tiles are as far as the selected animal can walk. E ends your turn.",
     "rocks": "Stone blocks sight. Dim ground is hidden from the animal that is moving.",
-    "ford": "A straight step costs 1. A diagonal costs 2. A buffalo can wade the river.",
+    "ford": "Water slows a step. A buffalo crosses at full speed. Prey cannot be bitten in the water.",
     "rookery": "The hare spooks early. The heron sees farther than it can step. Jackals hunt as a pair.",
 }
 
@@ -181,6 +181,24 @@ class Renderer:
         self._draw_goal(surface)
         self._draw_hud(surface)
         self._draw_play_notes(surface)
+
+    def draw_result(self, surface: pygame.Surface) -> None:
+        """A card over the board once a side has won. The legend and buttons stay clear."""
+        notice = result_notice(self.sim)
+        if notice is None:
+            return
+        title, detail = notice
+        veil = pygame.Surface((self.camera.width, self.camera.height), pygame.SRCALPHA)
+        veil.fill((12, 24, 18, 150))
+        surface.blit(veil, (0, 0))
+        rect = pygame.Rect(0, 0, min(440, self.camera.width - 80), 156)
+        rect.center = (self.camera.width // 2, self.camera.height // 2 - 36)
+        card(surface, rect, PAPER, radius=22)
+        tone = MOSS if title == "Victory" else SIGNAL if title == "Defeat" else INK
+        round_rect(surface, tone, pygame.Rect(rect.x + 28, rect.y + 28, 36, 6), radius=3)
+        self.queue_text(title, tone, (rect.x + 28, rect.y + 46), size=32, bold=True)
+        self.queue_text(detail, INK, (rect.x + 28, rect.y + 96), size=16)
+        self.queue_text("Restart keeps this side. Menu leaves the match.", MUTED, (rect.x + 28, rect.y + 120), size=13)
 
     def _draw_sight_fog(self, surface: pygame.Surface) -> None:
         actor_id = self.sim.active_agent_id

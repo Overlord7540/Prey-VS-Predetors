@@ -8,12 +8,12 @@
   "feeding_grounds": [
     {"row": 3, "col": 9, "radius": 1},
     {"row": 11, "col": 10, "radius": 1},
-    {"row": 14, "col": 10, "radius": 1}
+    {"row": 15, "col": 4, "radius": 1}
   ],
   "resource_nodes": [
     {"row": 4, "col": 3},
     {"row": 16, "col": 6},
-    {"row": 2, "col": 5},
+    {"row": 17, "col": 4},
     {"row": 16, "col": 8}
   ],
   "rocks": [

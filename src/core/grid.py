@@ -72,6 +72,13 @@ class Grid:
     def is_passable(self, pos: Coord) -> bool:
         return self.in_bounds(pos) and self.tile_props(pos).passable
 
+    def is_enterable(self, pos: Coord) -> bool:
+        """Land, a ford, or deep water. Deep water is slow except for a buffalo."""
+        if not self.in_bounds(pos):
+            return False
+        props = self.tile_props(pos)
+        return props.passable or props.is_water
+
     def neighbors(self, pos: Coord, diagonals: bool = True) -> Iterator[Coord]:
         r, c = pos
         deltas = [(-1, 0), (1, 0), (0, -1), (0, 1)]

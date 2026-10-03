@@ -6,7 +6,7 @@
     {"col_start": 5, "col_end": 6}
   ],
   "feeding_grounds": [
-    {"row": 1, "col": 6, "radius": 1},
+    {"row": 8, "col": 9, "radius": 1},
     {"row": 8, "col": 2, "radius": 1}
   ],
   "resource_nodes": [

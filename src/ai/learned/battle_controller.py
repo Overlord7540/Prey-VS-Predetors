@@ -5,6 +5,7 @@ import json
 import math
 import random
 
+from src.ai.battle_search import approach_if_holding
 from src.ai.learned.battle_features import FEATURE_COUNT, action_features, battle_candidates
 from src.ai.learned.network import PolicyNet
 from src.core.battle_match import BattleAction, BattleView
@@ -57,7 +58,7 @@ class BattleLearnedController:
         else:
             chosen = max(range(len(scores)), key=lambda index: (scores[index], -index))
         destination, target = actions[chosen]
-        return BattleAction(destination, target, "Battle policy")
+        return approach_if_holding(view, BattleAction(destination, target, "Battle policy"), "Battle policy")
 
     def learn(self, hunter_return: float, herd_return: float, learning_rate: float) -> None:
         if self.net is None:

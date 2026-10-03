@@ -6,11 +6,15 @@
     {"col_start": 5, "col_end": 6}
   ],
   "feeding_grounds": [
+    {"row": 1, "col": 8, "radius": 0},
+    {"row": 0, "col": 6, "radius": 0},
+    {"row": 2, "col": 6, "radius": 0},
+    {"row": 0, "col": 2, "radius": 0},
     {"row": 8, "col": 4, "radius": 0},
-    {"row": 8, "col": 6, "radius": 0},
-    {"row": 1, "col": 8, "radius": 1}
+    {"row": 8, "col": 6, "radius": 0}
   ],
   "resource_nodes": [
+    {"row": 1, "col": 4},
     {"row": 9, "col": 8},
     {"row": 6, "col": 1}
   ],

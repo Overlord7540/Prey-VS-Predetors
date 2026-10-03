@@ -42,7 +42,7 @@ def test_buffalo_is_the_slow_high_hp_eater():
     assert match.grid.resources_remaining[node] == 0
 
 
-def test_a_buffalo_can_cross_the_river_and_is_exposed_if_it_stops_there():
+def test_water_slows_a_deer_and_a_buffalo_still_crosses():
     match = build_default_scenario(seed=1, scenario_name="basin")
     buffalo = next(prey for prey in match.prey if prey.species == "buffalo")
     deer = next(prey for prey in match.prey if prey.species == "deer")
@@ -55,7 +55,8 @@ def test_a_buffalo_can_cross_the_river_and_is_exposed_if_it_stops_there():
     assert match.grid.tiles[river][0] == "river"
     assert (river, 0) in match.movement_paths(buffalo)
     assert (river - 1, 0) in match.movement_paths(buffalo)
-    assert (river, 2) not in match.movement_paths(deer)
+    assert (river, 2) in match.movement_paths(deer)
+    assert (river - 1, 2) not in match.movement_paths(deer)
 
     match.unit_stats["tiger"].damage_spread = 0
     hunter = match.predators[0]
@@ -69,7 +70,8 @@ def test_a_buffalo_can_cross_the_river_and_is_exposed_if_it_stops_there():
     buffalo.pos = (river, 0)
     hunter.attack_used = False
     match._attack(hunter, buffalo)
-    assert buffalo.hp == 60 - 32 - 8
+    assert buffalo.hp == 60
+    assert match.attack_targets(hunter.agent_id, hunter.pos) == []
 
 
 def test_a_giraffe_recovers_ten_health_on_its_activation():
